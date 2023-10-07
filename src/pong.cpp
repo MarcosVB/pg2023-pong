@@ -208,22 +208,25 @@ int main()
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 void processInput(GLFWwindow *window)
 {
+    const float rectangleHeight = 0.2f; // Height of the rectangle
+    const float moveSpeed = 0.01f;      // Speed of movement
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
     // Update the Y-axis offset for the left rectangle when "W" is pressed
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        leftRectangleYOffset += 0.01f; // You can adjust the speed as needed
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && leftRectangleYOffset + rectangleHeight / 2 < 1.0f)
+        leftRectangleYOffset += moveSpeed;
 
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        leftRectangleYOffset -= 0.01f;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && leftRectangleYOffset - rectangleHeight / 2 > -1.0f)
+        leftRectangleYOffset -= moveSpeed;
 
-    // Update the Y-axis offset for the left rectangle when "W" is pressed
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        rightRectangleYOffset += 0.01f; // You can adjust the speed as needed
+    // Update the Y-axis offset for the right rectangle when "UP" is pressed
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && rightRectangleYOffset + rectangleHeight / 2 < 1.0f)
+        rightRectangleYOffset += moveSpeed;
 
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        rightRectangleYOffset -= 0.01f;
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && rightRectangleYOffset - rectangleHeight / 2 > -1.0f)
+        rightRectangleYOffset -= moveSpeed;
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
