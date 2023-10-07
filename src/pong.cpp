@@ -22,9 +22,10 @@ const char *fragmentShaderSource = "#version 330 core\n"
                                    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
                                    "}\n\0";
 
-// Variable to hold the Y-axis offset for the left rectangle
-float leftRectangleYOffset = 0.0f;
-float rightRectangleYOffset = 0.0f;
+const float moveSpeed = 0.01f;      // Speed of movement
+const float rectangleHeight = 0.2f; // Height of the rectangle
+float leftRectangleYOffset = 0.0f;  // Variable to hold the Y-axis offset for the left rectangle
+float rightRectangleYOffset = 0.0f; // Variable to hold the Y-axis offset for the right rectangle
 
 int main()
 {
@@ -189,17 +190,15 @@ int main()
             updatedRectangleVertices[i] = rectangleVertices[i];
         }
         // Update Y-coordinates for both triangles of the left rectangle
-        int leftRectangleIndices[] = {1, 4, 7, 10, 13, 16};
-        for (int i = 0; i < 6; ++i)
+        for (int i = 1; i < 18; i += 3) // Go up to index 16 to update all vertices of the left rectangle
         {
-            updatedRectangleVertices[leftRectangleIndices[i]] += leftRectangleYOffset;
+            updatedRectangleVertices[i] += leftRectangleYOffset;
         }
 
         // Update Y-coordinates for both triangles of the right rectangle
-        int rightRectangleIndices[] = {19, 22, 25, 28, 31, 34};
-        for (int i = 0; i < 6; ++i)
+        for (int i = 19; i < 36; i += 3) // Go up to index 16 to update all vertices of the left rectangle
         {
-            updatedRectangleVertices[rightRectangleIndices[i]] += rightRectangleYOffset;
+            updatedRectangleVertices[i] += rightRectangleYOffset;
         }
 
         // Update the VBO with the new vertex data
@@ -237,9 +236,6 @@ int main()
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 void processInput(GLFWwindow *window)
 {
-    const float rectangleHeight = 0.2f; // Height of the rectangle
-    const float moveSpeed = 0.01f;      // Speed of movement
-
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
