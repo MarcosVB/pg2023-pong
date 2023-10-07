@@ -28,10 +28,10 @@ float leftRectangleYOffset = 0.0f;  // Variable to hold the Y-axis offset for th
 float rightRectangleYOffset = 0.0f; // Variable to hold the Y-axis offset for the right rectangle
 
 // Ball variables
-float ballX = 0.0f;            // Initial X position of the ball
-float ballY = 0.0f;            // Initial Y position of the ball
-float ballSpeedX = 0.005f;     // Initial X-axis speed of the ball
-float ballSpeedY = 0.005f;     // Initial Y-axis speed of the ball
+float ballPositionX = 0.0f;    // Initial X position of the ball
+float ballPositionY = 0.0f;    // Initial Y position of the ball
+float ballVelocityX = 0.005f;  // Initial X-axis speed of the ball
+float ballVelocityY = 0.005f;  // Initial Y-axis speed of the ball
 const float ballSize = 0.025f; // Size of the ball
 
 int main()
@@ -189,42 +189,6 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // update ball position
-        ballX += ballSpeedX;
-        ballY += ballSpeedY;
-
-        // bounce the ball off the top and bottom walls
-        if (ballY + ballSize > 1.0f || ballY - ballSize < -1.0f)
-        {
-            ballSpeedY = -ballSpeedY;
-        }
-
-        // check collision with left and right rectangles
-        if (ballX - ballSize < -0.85f && ballX + ballSize > -0.85f &&
-            ballY + ballSize > leftRectangleYOffset - rectangleHeight / 2 &&
-            ballY - ballSize < leftRectangleYOffset + rectangleHeight / 2)
-        {
-            ballSpeedX = -ballSpeedX;
-        }
-        else if (ballX + ballSize > 0.85f && ballX - ballSize < 0.85f &&
-                 ballY + ballSize > rightRectangleYOffset - rectangleHeight / 2 &&
-                 ballY - ballSize < rightRectangleYOffset + rectangleHeight / 2)
-        {
-            ballSpeedX = -ballSpeedX;
-        }
-
-        // Update X-coordinates for the ball
-        for (int i = 0; i < 18; i += 3)
-        {
-            ballVertices[i] += ballSpeedX;
-        }
-
-        // Update Y-coordinates for the ball
-        for (int i = 1; i < 18; i += 3)
-        {
-            ballVertices[i] += ballSpeedY;
-        }
-
         // Update vertex data for both rectangles based on their Y-axis offsets
         float updatedRectangleVertices[36];
         for (int i = 0; i < 36; ++i)
@@ -243,23 +207,57 @@ int main()
             updatedRectangleVertices[i] += rightRectangleYOffset;
         }
 
-        // Update the VBO with the new vertex data
-        glBindBuffer(GL_ARRAY_BUFFER, ballVBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ballVertices), ballVertices);
-
-        // Update the VBO with the new vertex data
+        // Update the VBO with the new vertex data for the rectangles
         glBindBuffer(GL_ARRAY_BUFFER, rectangleVBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(updatedRectangleVertices), updatedRectangleVertices);
 
-        // draw ball
-        glBindVertexArray(ballVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        // Ball movement
+        ballPositionX += ballVelocityX;
+        ballPositionY += ballVelocityY;
+
+        // Wall collision
+        if (ballPositionY + ballSize >= 1.0f || ballPositionY - ballSize <= -1.0f)
+        {
+            ballVelocityY = -ballVelocityY;
+        }
+
+        // Paddle collision (simplified for demonstration)
+        if ((ballPositionX - ballSize <= -0.8f && ballPositionY <= leftRectangleYOffset + 0.1f && ballPositionY >= leftRectangleYOffset - 0.1f) ||
+            (ballPositionX + ballSize >= 0.8f && ballPositionY <= rightRectangleYOffset + 0.1f && ballPositionY >= rightRectangleYOffset - 0.1f))
+        {
+            ballVelocityX = -ballVelocityX;
+        }
+
+        // Reset ball if it goes past the left or right edges
+        if (ballPositionX - ballSize <= -1.0f || ballPositionX + ballSize >= 1.0f)
+        {
+            ballPositionX = 0.0f;
+            ballPositionY = 0.0f;
+        }
+
+        // Update ball vertex data based on its position
+        float updatedBallVertices[18];
+        for (int i = 0; i < 18; i += 3)
+        {
+            updatedBallVertices[i] = ballVertices[i] + ballPositionX;
+            updatedBallVertices[i + 1] = ballVertices[i + 1] + ballPositionY;
+            updatedBallVertices[i + 2] = ballVertices[i + 2];
+        }
+
+        // Update the VBO with the new vertex data for the ball
+        glBindBuffer(GL_ARRAY_BUFFER, ballVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(updatedBallVertices), updatedBallVertices);
 
         // Activate the shader program
         glUseProgram(shaderProgram);
 
+        // Render the rectangles
         glBindVertexArray(rectangleVAO);
         glDrawArrays(GL_TRIANGLES, 0, 12);
+
+        // Render the ball
+        glBindVertexArray(ballVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
