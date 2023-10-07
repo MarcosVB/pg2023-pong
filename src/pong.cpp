@@ -144,6 +144,33 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    // Ball vertices
+    float ballSize = 0.025f; // Adjust as needed
+    float ballVertices[] = {
+        -ballSize, ballSize, 0.0f, // Top-left
+        ballSize, ballSize, 0.0f,  // Top-right
+        ballSize, -ballSize, 0.0f, // Bottom-right
+
+        ballSize, -ballSize, 0.0f,  // Bottom-right
+        -ballSize, -ballSize, 0.0f, // Bottom-left
+        -ballSize, ballSize, 0.0f   // Top-left
+    };
+
+    unsigned int ballVBO, ballVAO;
+    glGenVertexArrays(1, &ballVAO);
+    glGenBuffers(1, &ballVBO);
+
+    glBindVertexArray(ballVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, ballVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(ballVertices), ballVertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -179,6 +206,10 @@ int main()
         glBindBuffer(GL_ARRAY_BUFFER, rectangleVBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(updatedRectangleVertices), updatedRectangleVertices);
 
+        // draw ball
+        glBindVertexArray(ballVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6); // Draw the ball
+
         // Activate the shader program
         glUseProgram(shaderProgram);
 
@@ -203,8 +234,6 @@ int main()
     return 0;
 }
 
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 void processInput(GLFWwindow *window)
 {
