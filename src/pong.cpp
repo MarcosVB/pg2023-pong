@@ -22,6 +22,9 @@ const char *fragmentShaderSource = "#version 330 core\n"
                                    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
                                    "}\n\0";
 
+// Variable to hold the Y-axis offset for the left rectangle
+float leftRectangleYOffset = 0.0f;
+
 int main()
 {
     // glfw: initialize and configure
@@ -145,12 +148,63 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         // input
-        // -----
         processInput(window);
 
         // render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // Update vertex data for the left rectangle based on the Y-axis offset
+        float updatedRectangleVertices[24];
+        for (int i = 0; i < 24; ++i)
+        {
+            updatedRectangleVertices[i] = rectangleVertices[i];
+        }
+        // Update Y-coordinates for both triangles of the left rectangle
+        for (int i = 1; i <= 16; i += 3) // Go up to index 16 to update all vertices of the left rectangle
+        {
+            updatedRectangleVertices[i] += leftRectangleYOffset;
+        }
+
+        // Update the VBO with the new vertex data
+        glBindBuffer(GL_ARRAY_BUFFER, rectangleVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(updatedRectangleVertices), updatedRectangleVertices);
+
+        // Activate the shader program
+        glUseProgram(shaderProgram);
+
+        glBindVertexArray(rectangleVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 12); // Draw both rectangles
+
+        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+        // -------------------------------------------------------------------------------
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    {
+        // input
+        processInput(window);
+
+        // render
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // Update vertex data for the left rectangle based on the Y-axis offset
+        float updatedRectangleVertices[24];
+        for (int i = 0; i < 24; ++i)
+        {
+            updatedRectangleVertices[i] = rectangleVertices[i];
+        }
+        // Update Y-coordinates for both triangles of the left rectangle
+        for (int i = 1; i <= 11; i += 3) // Only go up to index 11 to update only the left rectangle
+        {
+            updatedRectangleVertices[i] += leftRectangleYOffset;
+        }
+
+        // Update the VBO with the new vertex data
+        glBindBuffer(GL_ARRAY_BUFFER, rectangleVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(updatedRectangleVertices), updatedRectangleVertices);
 
         // Activate the shader program
         glUseProgram(shaderProgram);
@@ -178,10 +232,15 @@ int main()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
+// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    // Update the Y-axis offset for the left rectangle when "W" is pressed
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        leftRectangleYOffset += 0.01f; // You can adjust the speed as needed
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
