@@ -27,6 +27,13 @@ const float rectangleHeight = 0.2f; // Height of the rectangle
 float leftRectangleYOffset = 0.0f;  // Variable to hold the Y-axis offset for the left rectangle
 float rightRectangleYOffset = 0.0f; // Variable to hold the Y-axis offset for the right rectangle
 
+// Ball variables
+float ballX = 0.0f;            // Initial X position of the ball
+float ballY = 0.0f;            // Initial Y position of the ball
+float ballSpeedX = 0.005f;     // Initial X-axis speed of the ball
+float ballSpeedY = 0.005f;     // Initial Y-axis speed of the ball
+const float ballSize = 0.025f; // Size of the ball
+
 int main()
 {
     // glfw: initialize and configure
@@ -146,7 +153,6 @@ int main()
     glBindVertexArray(0);
 
     // Ball vertices
-    float ballSize = 0.025f; // Adjust as needed
     float ballVertices[] = {
         -ballSize, ballSize, 0.0f, // Top-left
         ballSize, ballSize, 0.0f,  // Top-right
@@ -183,6 +189,42 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        // update ball position
+        ballX += ballSpeedX;
+        ballY += ballSpeedY;
+
+        // bounce the ball off the top and bottom walls
+        if (ballY + ballSize > 1.0f || ballY - ballSize < -1.0f)
+        {
+            ballSpeedY = -ballSpeedY;
+        }
+
+        // check collision with left and right rectangles
+        if (ballX - ballSize < -0.85f && ballX + ballSize > -0.85f &&
+            ballY + ballSize > leftRectangleYOffset - rectangleHeight / 2 &&
+            ballY - ballSize < leftRectangleYOffset + rectangleHeight / 2)
+        {
+            ballSpeedX = -ballSpeedX;
+        }
+        else if (ballX + ballSize > 0.85f && ballX - ballSize < 0.85f &&
+                 ballY + ballSize > rightRectangleYOffset - rectangleHeight / 2 &&
+                 ballY - ballSize < rightRectangleYOffset + rectangleHeight / 2)
+        {
+            ballSpeedX = -ballSpeedX;
+        }
+
+        // Update X-coordinates for the ball
+        for (int i = 0; i < 18; i += 3)
+        {
+            ballVertices[i] += ballSpeedX;
+        }
+
+        // Update Y-coordinates for the ball
+        for (int i = 1; i < 18; i += 3)
+        {
+            ballVertices[i] += ballSpeedY;
+        }
+
         // Update vertex data for both rectangles based on their Y-axis offsets
         float updatedRectangleVertices[36];
         for (int i = 0; i < 36; ++i)
@@ -190,16 +232,20 @@ int main()
             updatedRectangleVertices[i] = rectangleVertices[i];
         }
         // Update Y-coordinates for both triangles of the left rectangle
-        for (int i = 1; i < 18; i += 3) // Go up to index 16 to update all vertices of the left rectangle
+        for (int i = 1; i < 18; i += 3)
         {
             updatedRectangleVertices[i] += leftRectangleYOffset;
         }
 
         // Update Y-coordinates for both triangles of the right rectangle
-        for (int i = 19; i < 36; i += 3) // Go up to index 16 to update all vertices of the left rectangle
+        for (int i = 19; i < 36; i += 3)
         {
             updatedRectangleVertices[i] += rightRectangleYOffset;
         }
+
+        // Update the VBO with the new vertex data
+        glBindBuffer(GL_ARRAY_BUFFER, ballVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ballVertices), ballVertices);
 
         // Update the VBO with the new vertex data
         glBindBuffer(GL_ARRAY_BUFFER, rectangleVBO);
@@ -207,16 +253,15 @@ int main()
 
         // draw ball
         glBindVertexArray(ballVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6); // Draw the ball
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         // Activate the shader program
         glUseProgram(shaderProgram);
 
         glBindVertexArray(rectangleVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 12); // Draw both rectangles
+        glDrawArrays(GL_TRIANGLES, 0, 12);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -228,7 +273,6 @@ int main()
     glDeleteProgram(shaderProgram);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
     glfwTerminate();
     return 0;
 }
@@ -239,14 +283,12 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    // Update the Y-axis offset for the left rectangle when "W" is pressed
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && leftRectangleYOffset + rectangleHeight / 2 < 1.0f)
         leftRectangleYOffset += moveSpeed;
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && leftRectangleYOffset - rectangleHeight / 2 > -1.0f)
         leftRectangleYOffset -= moveSpeed;
 
-    // Update the Y-axis offset for the right rectangle when "UP" is pressed
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && rightRectangleYOffset + rectangleHeight / 2 < 1.0f)
         rightRectangleYOffset += moveSpeed;
 
@@ -255,10 +297,7 @@ void processInput(GLFWwindow *window)
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and
-    // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
 }
