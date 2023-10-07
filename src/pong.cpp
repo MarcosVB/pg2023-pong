@@ -104,22 +104,22 @@ int main()
     // Rectangle vertices
     float rectangleVertices[] = {
         // First rectangle (two triangles)
+        -0.85f, 0.1f, 0.0f,
         -0.8f, 0.1f, 0.0f,
-        -0.7f, 0.1f, 0.0f,
-        -0.7f, -0.1f, 0.0f,
-
-        -0.7f, -0.1f, 0.0f,
         -0.8f, -0.1f, 0.0f,
-        -0.8f, 0.1f, 0.0f,
+
+        -0.8f, -0.1f, 0.0f,
+        -0.85f, -0.1f, 0.0f,
+        -0.85f, 0.1f, 0.0f,
 
         // Second rectangle (two triangles)
-        0.7f, 0.1f, 0.0f,
         0.8f, 0.1f, 0.0f,
-        0.8f, -0.1f, 0.0f,
+        0.85f, 0.1f, 0.0f,
+        0.85f, -0.1f, 0.0f,
 
+        0.85f, -0.1f, 0.0f,
         0.8f, -0.1f, 0.0f,
-        0.7f, -0.1f, 0.0f,
-        0.7f, 0.1f, 0.0f};
+        0.8f, 0.1f, 0.0f};
 
     // Initialize VBO and VAO
     unsigned int rectangleVBO, rectangleVAO;
