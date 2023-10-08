@@ -439,11 +439,18 @@ int main()
                 ballVelocityY = -ballVelocityY;
             }
 
-            // Paddle collision (simplified for demonstration)
-            if ((ballPositionX - ballSize <= -0.8f && ballPositionY <= leftRectangleYOffset + 0.1f && ballPositionY >= leftRectangleYOffset - 0.1f) ||
-                (ballPositionX + ballSize >= 0.8f && ballPositionY <= rightRectangleYOffset + 0.1f && ballPositionY >= rightRectangleYOffset - 0.1f))
+            // Paddle collision
+            if (ballPositionX - ballSize <= -0.8f && ballPositionY <= leftRectangleYOffset + 0.1f && ballPositionY >= leftRectangleYOffset - 0.1f)
             {
                 ballVelocityX = -ballVelocityX;
+                float relativeIntersectionY = (leftRectangleYOffset - ballPositionY) / (rectangleHeight / 2);
+                ballVelocityY = relativeIntersectionY * 1.5f; // 1.5f determines the angle, adjust accordingly
+            }
+            else if (ballPositionX + ballSize >= 0.8f && ballPositionY <= rightRectangleYOffset + 0.1f && ballPositionY >= rightRectangleYOffset - 0.1f)
+            {
+                ballVelocityX = -ballVelocityX;
+                float relativeIntersectionY = (rightRectangleYOffset - ballPositionY) / (rectangleHeight / 2);
+                ballVelocityY = relativeIntersectionY * 1.5f; // 1.5f determines the angle, adjust accordingly
             }
 
             // Reset ball if it goes past the left or right edges
