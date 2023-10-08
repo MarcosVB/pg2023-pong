@@ -10,7 +10,7 @@
 #include FT_FREETYPE_H
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void processInput(GLFWwindow *window);
+void processInput(GLFWwindow *window, float deltaTime);
 void RenderText(unsigned int shaderProgram, std::string text, float x, float y, float scale, glm::vec3 color, int VAO, int VBO);
 float CalculateTextWidth(const std::string &text, float scale);
 
@@ -57,7 +57,7 @@ const char *freeTypeFragmentShaderCode =
     "    color = vec4(textColor, 1.0) * sampled;\n"
     "}";
 
-const float moveSpeed = 0.01f;      // Speed of movement
+const float moveSpeed = 1.0f;       // Speed of movement
 const float rectangleHeight = 0.2f; // Height of the rectangle
 float leftRectangleYOffset = 0.0f;  // Variable to hold the Y-axis offset for the left rectangle
 float rightRectangleYOffset = 0.0f; // Variable to hold the Y-axis offset for the right rectangle
@@ -65,8 +65,8 @@ float rightRectangleYOffset = 0.0f; // Variable to hold the Y-axis offset for th
 // Ball variables
 float ballPositionX = 0.0f;    // Initial X position of the ball
 float ballPositionY = 0.0f;    // Initial Y position of the ball
-float ballVelocityX = 0.005f;  // Initial X-axis speed of the ball
-float ballVelocityY = 0.005f;  // Initial Y-axis speed of the ball
+float ballVelocityX = 0.5f;    // Initial X-axis speed of the ball
+float ballVelocityY = 0.5f;    // Initial Y-axis speed of the ball
 const float ballSize = 0.025f; // Size of the ball
 
 bool isPlaying = false;
@@ -345,13 +345,18 @@ int main()
     unsigned int textColorLoc = glGetUniformLocation(shaderProgram, "textColor");
     glUniform3f(textColorLoc, color.x, color.y, color.z);
 
+    double lastFrameTime = glfwGetTime();
+    double deltaTime = 0.0;
+
     // render loop
     // -----------
+    double targetFrameTime = 1.0 / 60.0; // 60 FPS
     while (!glfwWindowShouldClose(window))
     {
-
+        double currentFrameTime = glfwGetTime();
+        deltaTime = currentFrameTime - lastFrameTime;
         // Input
-        processInput(window);
+        processInput(window, deltaTime);
 
         // Render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -425,8 +430,8 @@ int main()
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(updatedRectangleVertices), updatedRectangleVertices);
 
             // Ball movement
-            ballPositionX += ballVelocityX;
-            ballPositionY += ballVelocityY;
+            ballPositionX += ballVelocityX * deltaTime;
+            ballPositionY += ballVelocityY * deltaTime;
 
             // Wall collision
             if (ballPositionY + ballSize >= 1.0f || ballPositionY - ballSize <= -1.0f)
@@ -494,6 +499,15 @@ int main()
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        double frameEndTime = glfwGetTime();
+        double frameDuration = frameEndTime - currentFrameTime;
+
+        if (frameDuration < targetFrameTime)
+        {
+            glfwWaitEventsTimeout(targetFrameTime - frameDuration);
+        }
+        lastFrameTime = currentFrameTime;
     }
 
     // optional: de-allocate all resources once they've outlived their purpose:
@@ -508,7 +522,7 @@ int main()
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-void processInput(GLFWwindow *window)
+void processInput(GLFWwindow *window, float deltaTime)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -522,16 +536,20 @@ void processInput(GLFWwindow *window)
             glfwSetWindowShouldClose(window, true);
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && leftRectangleYOffset + rectangleHeight / 2 < 1.0f)
-            leftRectangleYOffset += moveSpeed;
+            leftRectangleYOffset += moveSpeed * deltaTime;
+        ;
 
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && leftRectangleYOffset - rectangleHeight / 2 > -1.0f)
-            leftRectangleYOffset -= moveSpeed;
+            leftRectangleYOffset -= moveSpeed * deltaTime;
+        ;
 
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && rightRectangleYOffset + rectangleHeight / 2 < 1.0f)
-            rightRectangleYOffset += moveSpeed;
+            rightRectangleYOffset += moveSpeed * deltaTime;
+        ;
 
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && rightRectangleYOffset - rectangleHeight / 2 > -1.0f)
-            rightRectangleYOffset -= moveSpeed;
+            rightRectangleYOffset -= moveSpeed * deltaTime;
+        ;
     }
 
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && gameOver)
