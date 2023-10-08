@@ -305,6 +305,12 @@ int main()
     unsigned int freeTypeVertexShader = compileShader(GL_VERTEX_SHADER, freeTypeVertexShaderSource);
     unsigned int freeTypeFragmentShader = compileShader(GL_FRAGMENT_SHADER, freeTypeFragmentShaderCode);
 
+    if (!freeTypeVertexShader || !freeTypeFragmentShader)
+    {
+        std::cout << "Text shader program creation failed." << std::endl;
+        return -1;
+    }
+
     unsigned int freeTypeShaderProgram = glCreateProgram();
     glAttachShader(freeTypeShaderProgram, freeTypeVertexShader);
     glAttachShader(freeTypeShaderProgram, freeTypeFragmentShader);
