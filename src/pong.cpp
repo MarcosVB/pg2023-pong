@@ -69,6 +69,8 @@ float ballVelocityX = 0.005f;  // Initial X-axis speed of the ball
 float ballVelocityY = 0.005f;  // Initial Y-axis speed of the ball
 const float ballSize = 0.025f; // Size of the ball
 
+bool isPlaying = false;
+
 struct Character
 {
     unsigned int TextureID; // ID handle of the glyph texture
@@ -345,102 +347,120 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
-        // input
+
+        // Input
         processInput(window);
 
-        // render
+        // Render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Update vertex data for both rectangles based on their Y-axis offsets
-        float updatedRectangleVertices[36];
-        for (int i = 0; i < 36; ++i)
+        if (!isPlaying)
         {
-            updatedRectangleVertices[i] = rectangleVertices[i];
+            glUseProgram(freeTypeShaderProgram);
+            unsigned int projectionLoc = glGetUniformLocation(freeTypeShaderProgram, "projection");
+            glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+            std::string playMessage = "Press Enter to Play :)";
+            float textScale = 0.5f; // Adjust this value to change the size of the text
+            float textWidth = CalculateTextWidth(playMessage, textScale);
+            float textHeight = 48 * textScale; // 48 is the size you set for the font. Adjust based on your font's characteristics
+            float textXPosition = (SCR_WIDTH - textWidth) / 2.0f;
+            float textYPosition = (SCR_HEIGHT - textHeight) / 2.0f;
+
+            RenderText(freeTypeShaderProgram, playMessage, textXPosition, textYPosition, textScale, glm::vec3(0.5, 0.8f, 0.2f), freeTypeVAO, freeTypeVBO);
         }
-        // Update Y-coordinates for both triangles of the left rectangle
-        for (int i = 1; i < 18; i += 3)
+        else
         {
-            updatedRectangleVertices[i] += leftRectangleYOffset;
-        }
-
-        // Update Y-coordinates for both triangles of the right rectangle
-        for (int i = 19; i < 36; i += 3)
-        {
-            updatedRectangleVertices[i] += rightRectangleYOffset;
-        }
-
-        // Update the VBO with the new vertex data for the rectangles
-        glBindBuffer(GL_ARRAY_BUFFER, rectangleVBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(updatedRectangleVertices), updatedRectangleVertices);
-
-        // Ball movement
-        ballPositionX += ballVelocityX;
-        ballPositionY += ballVelocityY;
-
-        // Wall collision
-        if (ballPositionY + ballSize >= 1.0f || ballPositionY - ballSize <= -1.0f)
-        {
-            ballVelocityY = -ballVelocityY;
-        }
-
-        // Paddle collision (simplified for demonstration)
-        if ((ballPositionX - ballSize <= -0.8f && ballPositionY <= leftRectangleYOffset + 0.1f && ballPositionY >= leftRectangleYOffset - 0.1f) ||
-            (ballPositionX + ballSize >= 0.8f && ballPositionY <= rightRectangleYOffset + 0.1f && ballPositionY >= rightRectangleYOffset - 0.1f))
-        {
-            ballVelocityX = -ballVelocityX;
-        }
-
-        // Reset ball if it goes past the left or right edges
-        if (ballPositionX - ballSize <= -1.0f || ballPositionX + ballSize >= 1.0f)
-        {
-            if (ballPositionX - ballSize <= -1.0f)
+            // Update vertex data for both rectangles based on their Y-axis offsets
+            float updatedRectangleVertices[36];
+            for (int i = 0; i < 36; ++i)
             {
-                rightScore++; // Increment right player's score when the ball passes the left edge
+                updatedRectangleVertices[i] = rectangleVertices[i];
             }
-            if (ballPositionX + ballSize >= 1.0f)
+            // Update Y-coordinates for both triangles of the left rectangle
+            for (int i = 1; i < 18; i += 3)
             {
-                leftScore++; // Increment left player's score when the ball passes the right edge
+                updatedRectangleVertices[i] += leftRectangleYOffset;
             }
-            ballPositionX = 0.0f;
-            ballPositionY = 0.0f;
+
+            // Update Y-coordinates for both triangles of the right rectangle
+            for (int i = 19; i < 36; i += 3)
+            {
+                updatedRectangleVertices[i] += rightRectangleYOffset;
+            }
+
+            // Update the VBO with the new vertex data for the rectangles
+            glBindBuffer(GL_ARRAY_BUFFER, rectangleVBO);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(updatedRectangleVertices), updatedRectangleVertices);
+
+            // Ball movement
+            ballPositionX += ballVelocityX;
+            ballPositionY += ballVelocityY;
+
+            // Wall collision
+            if (ballPositionY + ballSize >= 1.0f || ballPositionY - ballSize <= -1.0f)
+            {
+                ballVelocityY = -ballVelocityY;
+            }
+
+            // Paddle collision (simplified for demonstration)
+            if ((ballPositionX - ballSize <= -0.8f && ballPositionY <= leftRectangleYOffset + 0.1f && ballPositionY >= leftRectangleYOffset - 0.1f) ||
+                (ballPositionX + ballSize >= 0.8f && ballPositionY <= rightRectangleYOffset + 0.1f && ballPositionY >= rightRectangleYOffset - 0.1f))
+            {
+                ballVelocityX = -ballVelocityX;
+            }
+
+            // Reset ball if it goes past the left or right edges
+            if (ballPositionX - ballSize <= -1.0f || ballPositionX + ballSize >= 1.0f)
+            {
+                if (ballPositionX - ballSize <= -1.0f)
+                {
+                    rightScore++; // Increment right player's score when the ball passes the left edge
+                }
+                if (ballPositionX + ballSize >= 1.0f)
+                {
+                    leftScore++; // Increment left player's score when the ball passes the right edge
+                }
+                ballPositionX = 0.0f;
+                ballPositionY = 0.0f;
+            }
+
+            // Update ball vertex data based on its position
+            float updatedBallVertices[18];
+            for (int i = 0; i < 18; i += 3)
+            {
+                updatedBallVertices[i] = ballVertices[i] + ballPositionX;
+                updatedBallVertices[i + 1] = ballVertices[i + 1] + ballPositionY;
+                updatedBallVertices[i + 2] = ballVertices[i + 2];
+            }
+
+            // Update the VBO with the new vertex data for the ball
+            glBindBuffer(GL_ARRAY_BUFFER, ballVBO);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(updatedBallVertices), updatedBallVertices);
+
+            // Activate the shader program
+            glUseProgram(shaderProgram);
+
+            // Render the rectangles
+            glBindVertexArray(rectangleVAO);
+            glDrawArrays(GL_TRIANGLES, 0, 12);
+
+            // Render the ball
+            glBindVertexArray(ballVAO);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+
+            // render the score
+            glUseProgram(freeTypeShaderProgram);
+            unsigned int projectionLoc = glGetUniformLocation(freeTypeShaderProgram, "projection");
+            glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+            std::string scoreText = std::to_string(leftScore) + " - " + std::to_string(rightScore); // Update the score text
+            float textWidth = CalculateTextWidth(scoreText, 1.0f);                                  // Assuming a scale of 1.0
+            float scoreXPosition = (SCR_WIDTH - textWidth) / 2.0f;
+            float scoreYPosition = SCR_HEIGHT - 70.0f; // 50 pixels from the top, adjust as necessary
+            RenderText(freeTypeShaderProgram, scoreText, scoreXPosition, scoreYPosition, 1.0f, glm::vec3(0.5, 0.8f, 0.2f), freeTypeVAO, freeTypeVBO);
         }
-
-        // Update ball vertex data based on its position
-        float updatedBallVertices[18];
-        for (int i = 0; i < 18; i += 3)
-        {
-            updatedBallVertices[i] = ballVertices[i] + ballPositionX;
-            updatedBallVertices[i + 1] = ballVertices[i + 1] + ballPositionY;
-            updatedBallVertices[i + 2] = ballVertices[i + 2];
-        }
-
-        // Update the VBO with the new vertex data for the ball
-        glBindBuffer(GL_ARRAY_BUFFER, ballVBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(updatedBallVertices), updatedBallVertices);
-
-        // Activate the shader program
-        glUseProgram(shaderProgram);
-
-        // Render the rectangles
-        glBindVertexArray(rectangleVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 12);
-
-        // Render the ball
-        glBindVertexArray(ballVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-
-        // render the score
-        glUseProgram(freeTypeShaderProgram);
-        unsigned int projectionLoc = glGetUniformLocation(freeTypeShaderProgram, "projection");
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
-        std::string scoreText = std::to_string(leftScore) + " - " + std::to_string(rightScore); // Update the score text
-        float textWidth = CalculateTextWidth(scoreText, 1.0f);                                  // Assuming a scale of 1.0
-        float scoreXPosition = (SCR_WIDTH - textWidth) / 2.0f;
-        float scoreYPosition = SCR_HEIGHT - 70.0f; // 50 pixels from the top, adjust as necessary
-        RenderText(freeTypeShaderProgram, scoreText, scoreXPosition, scoreYPosition, 1.0f, glm::vec3(0.5, 0.8f, 0.2f), freeTypeVAO, freeTypeVBO);
-
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -463,17 +483,26 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && leftRectangleYOffset + rectangleHeight / 2 < 1.0f)
-        leftRectangleYOffset += moveSpeed;
+    if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS)
+        isPlaying = true; // Start the game when Enter is pressed
 
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && leftRectangleYOffset - rectangleHeight / 2 > -1.0f)
-        leftRectangleYOffset -= moveSpeed;
+    if (isPlaying)
+    {
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            glfwSetWindowShouldClose(window, true);
 
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && rightRectangleYOffset + rectangleHeight / 2 < 1.0f)
-        rightRectangleYOffset += moveSpeed;
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && leftRectangleYOffset + rectangleHeight / 2 < 1.0f)
+            leftRectangleYOffset += moveSpeed;
 
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && rightRectangleYOffset - rectangleHeight / 2 > -1.0f)
-        rightRectangleYOffset -= moveSpeed;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && leftRectangleYOffset - rectangleHeight / 2 > -1.0f)
+            leftRectangleYOffset -= moveSpeed;
+
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && rightRectangleYOffset + rectangleHeight / 2 < 1.0f)
+            rightRectangleYOffset += moveSpeed;
+
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && rightRectangleYOffset - rectangleHeight / 2 > -1.0f)
+            rightRectangleYOffset -= moveSpeed;
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
