@@ -25,70 +25,77 @@ const unsigned int SCR_HEIGHT = 600;
 const char *vertexShaderSource = R"(
     #version 330 core
     layout (location = 0) in vec3 aPos;
-    layout (location = 1) in vec2 aTexCoord; // Texture coordinates
-    out vec2 TexCoord; // Pass texture coordinates to the fragment shader
+    layout (location = 1) in vec2 aTexCoord;
+    out vec2 TexCoord;
+    
     void main()
     {
         gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-        TexCoord = aTexCoord; // Pass texture coordinates to the fragment shader
+        TexCoord = aTexCoord;
     }
 )";
-const char *fragmentShaderSource = "#version 330 core\n"
-                                   "out vec4 FragColor;\n"
-                                   "void main()\n"
-                                   "{\n"
-                                   "   FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
-                                   "}\n\0";
 
-// Background vertex and fragment shader source code
+const char *fragmentShaderSource = R"(
+    #version 330 core
+    out vec4 FragColor;
+    
+    void main()
+    {
+        FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+)";
+
 const char *backgroundVertexShaderSource = R"(
     #version 330 core
     layout (location = 0) in vec3 aPos;
-    layout (location = 1) in vec2 aTexCoord; // Texture coordinates
-    out vec2 TexCoord; // Pass texture coordinates to the fragment shader
+    layout (location = 1) in vec2 aTexCoord;
+    out vec2 TexCoord;
+    
     void main()
     {
         gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-        TexCoord = aTexCoord; // Pass texture coordinates to the fragment shader
+        TexCoord = aTexCoord;
     }
 )";
 
 const char *backgroundFragmentShaderSource = R"(
     #version 330 core
     out vec4 FragColor;
-    in vec2 TexCoord; // Texture coordinates received from vertex shader
-    uniform sampler2D backgroundTexture; // Texture sampler for the background
+    in vec2 TexCoord;
+    uniform sampler2D backgroundTexture;
+    
     void main()
     {
-        FragColor = texture(backgroundTexture, TexCoord); // Use the background texture with the provided texture coordinates
+        FragColor = texture(backgroundTexture, TexCoord);
     }
 )";
 
-const char *freeTypeVertexShaderSource = "#version 330 core\n"
-                                         "layout (location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>\n"
-                                         "out vec2 TexCoords;\n"
-                                         "\n"
-                                         "uniform mat4 projection;\n"
-                                         "\n"
-                                         "void main()\n"
-                                         "{\n"
-                                         "    gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);\n"
-                                         "    TexCoords = vertex.zw;\n"
-                                         "}";
+const char *freeTypeVertexShaderSource = R"(
+    #version 330 core
+    layout (location = 0) in vec4 vertex;
+    out vec2 TexCoords;
+    uniform mat4 projection;
+    
+    void main()
+    {
+        gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);
+        TexCoords = vertex.zw;
+    }
+)";
 
-const char *freeTypeFragmentShaderCode =
-    "#version 330 core\n"
-    "in vec2 TexCoords;\n"
-    "out vec4 color;\n"
-    "\n"
-    "uniform sampler2D text;\n"
-    "uniform vec3 textColor;\n"
-    "\n"
-    "void main()\n"
-    "{\n"
-    "    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);\n"
-    "    color = vec4(textColor, 1.0) * sampled;\n"
-    "}";
+const char *freeTypeFragmentShaderCode = R"(
+    #version 330 core
+    in vec2 TexCoords;
+    out vec4 color;
+    uniform sampler2D text;
+    uniform vec3 textColor;
+    
+    void main()
+    {
+        vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);
+        color = vec4(textColor, 1.0) * sampled;
+    }
+)";
 
 const float moveSpeed = 1.5f;       // Speed of movement
 const float rectangleHeight = 0.2f; // Height of the rectangle
