@@ -98,7 +98,7 @@ float rightRectangleYOffset = 0.0f; // Variable to hold the Y-axis offset for th
 // Ball variables
 float ballPositionX = 0.0f;    // Initial X position of the ball
 float ballPositionY = 0.0f;    // Initial Y position of the ball
-float ballVelocityX = 0.5f;    // Initial X-axis speed of the ball
+float ballVelocityX = 0.8f;    // Initial X-axis speed of the ball
 float ballVelocityY = 0.0f;    // Initial Y-axis speed of the ball
 const float ballSize = 0.025f; // Size of the ball
 
