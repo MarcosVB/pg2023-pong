@@ -20,7 +20,8 @@
 				"${workspaceFolder}/app",
 				"-framework",
 				"OpenGL",
-				"-Wno-deprecated"
+				"-Wno-deprecated",
+				"-lfreetype"
 			],
 			"options": {
 				"cwd": "${fileDirname}"
