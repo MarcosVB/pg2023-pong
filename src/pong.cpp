@@ -66,8 +66,8 @@ float rightRectangleYOffset = 0.0f; // Variable to hold the Y-axis offset for th
 // Ball variables
 float ballPositionX = 0.0f;    // Initial X position of the ball
 float ballPositionY = 0.0f;    // Initial Y position of the ball
-float ballVelocityX = 0.3f;    // Initial X-axis speed of the ball
-float ballVelocityY = 0.3f;    // Initial Y-axis speed of the ball
+float ballVelocityX = 0.5f;    // Initial X-axis speed of the ball
+float ballVelocityY = 0.0f;    // Initial Y-axis speed of the ball
 const float ballSize = 0.025f; // Size of the ball
 
 bool isPlaying = false;
@@ -638,5 +638,5 @@ void resetBall()
     ballPositionX = 0.0f;
     ballPositionY = 0.0f;
     ballVelocityX = (rand() % 2 == 0 ? 1 : -1) * 0.3f; // Randomize starting direction
-    ballVelocityY = 0.3f;                              // Initial Y-axis speed of the ball
+    ballVelocityY = 0.0f;                              // Initial Y-axis speed of the ball
 }
