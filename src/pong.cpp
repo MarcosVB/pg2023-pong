@@ -70,6 +70,11 @@ float ballVelocityY = 0.005f;  // Initial Y-axis speed of the ball
 const float ballSize = 0.025f; // Size of the ball
 
 bool isPlaying = false;
+bool gameOver = false;
+
+int MAX_SCORE = 3;
+int leftScore = 0;
+int rightScore = 0;
 
 struct Character
 {
@@ -340,9 +345,6 @@ int main()
     unsigned int textColorLoc = glGetUniformLocation(shaderProgram, "textColor");
     glUniform3f(textColorLoc, color.x, color.y, color.z);
 
-    int leftScore = 0;
-    int rightScore = 0;
-
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -355,23 +357,51 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        if (leftScore == MAX_SCORE || rightScore == MAX_SCORE)
+        {
+            gameOver = true;
+            isPlaying = false; // stop the game
+        }
+
         if (!isPlaying)
         {
-            glUseProgram(freeTypeShaderProgram);
-            unsigned int projectionLoc = glGetUniformLocation(freeTypeShaderProgram, "projection");
-            glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+            if (gameOver)
+            {
+                std::string winner = leftScore == MAX_SCORE ? "Left Player" : "Right Player";
+                std::string winnerMessage = winner + " Wins!";
+                std::string restartMessage = "Press R to Restart.";
 
-            std::string playMessage = "Press Enter to Play :)";
-            float textScale = 0.5f; // Adjust this value to change the size of the text
-            float textWidth = CalculateTextWidth(playMessage, textScale);
-            float textHeight = 48 * textScale; // 48 is the size you set for the font. Adjust based on your font's characteristics
-            float textXPosition = (SCR_WIDTH - textWidth) / 2.0f;
-            float textYPosition = (SCR_HEIGHT - textHeight) / 2.0f;
+                float textWidth2 = CalculateTextWidth(restartMessage, 0.5f);
+                float textXPosition2 = (SCR_WIDTH - textWidth2) / 2.0f;
+                float textYPosition2 = SCR_HEIGHT / 2.0f - 15.0f; // Adding half of the padding for the second line
 
-            RenderText(freeTypeShaderProgram, playMessage, textXPosition, textYPosition, textScale, glm::vec3(0.5, 0.8f, 0.2f), freeTypeVAO, freeTypeVBO);
+                RenderText(freeTypeShaderProgram, restartMessage, textXPosition2, textYPosition2, 0.5f, glm::vec3(0.5, 0.8f, 0.2f), freeTypeVAO, freeTypeVBO);
+
+                float textWidth1 = CalculateTextWidth(winnerMessage, 0.5f);
+                float textXPosition1 = (SCR_WIDTH - textWidth1) / 2.0f;
+                float textYPosition1 = SCR_HEIGHT / 2.0f + 15.0f; // Subtracting half of the padding for the first line
+
+                RenderText(freeTypeShaderProgram, winnerMessage, textXPosition1, textYPosition1, 0.5f, glm::vec3(0.5, 0.8f, 0.2f), freeTypeVAO, freeTypeVBO);
+            }
+            else
+            {
+                glUseProgram(freeTypeShaderProgram);
+                unsigned int projectionLoc = glGetUniformLocation(freeTypeShaderProgram, "projection");
+                glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+                std::string playMessage = "Press Enter to Play :)";
+                float textScale = 0.5f; // Adjust this value to change the size of the text
+                float textWidth = CalculateTextWidth(playMessage, textScale);
+                float textHeight = 48 * textScale; // 48 is the size you set for the font. Adjust based on your font's characteristics
+                float textXPosition = (SCR_WIDTH - textWidth) / 2.0f;
+                float textYPosition = (SCR_HEIGHT - textHeight) / 2.0f;
+
+                RenderText(freeTypeShaderProgram, playMessage, textXPosition, textYPosition, textScale, glm::vec3(0.5, 0.8f, 0.2f), freeTypeVAO, freeTypeVBO);
+            }
         }
         else
         {
+
             // Update vertex data for both rectangles based on their Y-axis offsets
             float updatedRectangleVertices[36];
             for (int i = 0; i < 36; ++i)
@@ -502,6 +532,16 @@ void processInput(GLFWwindow *window)
 
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && rightRectangleYOffset - rectangleHeight / 2 > -1.0f)
             rightRectangleYOffset -= moveSpeed;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && gameOver)
+    {
+        leftScore = 0;
+        rightScore = 0;
+        ballPositionX = 0.0f;
+        ballPositionY = 0.0f;
+        gameOver = false;
+        isPlaying = true;
     }
 }
 
