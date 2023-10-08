@@ -37,7 +37,7 @@ const char *fragmentShaderSource = "#version 330 core\n"
                                    "out vec4 FragColor;\n"
                                    "void main()\n"
                                    "{\n"
-                                   "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+                                   "   FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
                                    "}\n\0";
 
 // Background vertex and fragment shader source code
@@ -521,13 +521,13 @@ int main()
                 float textXPosition2 = (SCR_WIDTH - textWidth2) / 2.0f;
                 float textYPosition2 = SCR_HEIGHT / 2.0f - 15.0f; // Adding half of the padding for the second line
 
-                RenderText(freeTypeShaderProgram, restartMessage, textXPosition2, textYPosition2, 0.5f, glm::vec3(0.5, 0.8f, 0.2f), freeTypeVAO, freeTypeVBO);
+                RenderText(freeTypeShaderProgram, restartMessage, textXPosition2, textYPosition2, 0.5f, glm::vec3(1.0, 1.0f, 1.0f), freeTypeVAO, freeTypeVBO);
 
                 float textWidth1 = CalculateTextWidth(winnerMessage, 0.5f);
                 float textXPosition1 = (SCR_WIDTH - textWidth1) / 2.0f;
                 float textYPosition1 = SCR_HEIGHT / 2.0f + 15.0f; // Subtracting half of the padding for the first line
 
-                RenderText(freeTypeShaderProgram, winnerMessage, textXPosition1, textYPosition1, 0.5f, glm::vec3(0.5, 0.8f, 0.2f), freeTypeVAO, freeTypeVBO);
+                RenderText(freeTypeShaderProgram, winnerMessage, textXPosition1, textYPosition1, 0.5f, glm::vec3(1.0f, 1.0f, 1.0f), freeTypeVAO, freeTypeVBO);
             }
             else
             {
@@ -541,8 +541,7 @@ int main()
                 float textHeight = 48 * textScale; // 48 is the size you set for the font. Adjust based on your font's characteristics
                 float textXPosition = (SCR_WIDTH - textWidth) / 2.0f;
                 float textYPosition = (SCR_HEIGHT - textHeight) / 2.0f;
-
-                RenderText(freeTypeShaderProgram, playMessage, textXPosition, textYPosition, textScale, glm::vec3(0.5, 0.8f, 0.2f), freeTypeVAO, freeTypeVBO);
+                RenderText(freeTypeShaderProgram, playMessage, textXPosition, textYPosition, textScale, glm::vec3(1.0f, 1.0f, 1.0f), freeTypeVAO, freeTypeVBO);
             }
         }
         else
@@ -642,7 +641,7 @@ int main()
             float textWidth = CalculateTextWidth(scoreText, 1.0f);                                  // Assuming a scale of 1.0
             float scoreXPosition = (SCR_WIDTH - textWidth) / 2.0f;
             float scoreYPosition = SCR_HEIGHT - 70.0f; // 50 pixels from the top, adjust as necessary
-            RenderText(freeTypeShaderProgram, scoreText, scoreXPosition, scoreYPosition, 1.0f, glm::vec3(0.5, 0.8f, 0.2f), freeTypeVAO, freeTypeVBO);
+            RenderText(freeTypeShaderProgram, scoreText, scoreXPosition, scoreYPosition, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f), freeTypeVAO, freeTypeVBO);
         }
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
