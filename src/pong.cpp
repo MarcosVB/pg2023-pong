@@ -337,6 +337,10 @@ int main()
 
     unsigned int textColorLoc = glGetUniformLocation(shaderProgram, "textColor");
     glUniform3f(textColorLoc, color.x, color.y, color.z);
+
+    int leftScore = 0;
+    int rightScore = 0;
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -390,6 +394,14 @@ int main()
         // Reset ball if it goes past the left or right edges
         if (ballPositionX - ballSize <= -1.0f || ballPositionX + ballSize >= 1.0f)
         {
+            if (ballPositionX - ballSize <= -1.0f)
+            {
+                rightScore++; // Increment right player's score when the ball passes the left edge
+            }
+            if (ballPositionX + ballSize >= 1.0f)
+            {
+                leftScore++; // Increment left player's score when the ball passes the right edge
+            }
             ballPositionX = 0.0f;
             ballPositionY = 0.0f;
         }
@@ -418,15 +430,15 @@ int main()
         glBindVertexArray(ballVAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        // render the text
+        // render the score
         glUseProgram(freeTypeShaderProgram);
         unsigned int projectionLoc = glGetUniformLocation(freeTypeShaderProgram, "projection");
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-        std::string scoreText = "1 - 0";                       // Or whatever your score text is
-        float textWidth = CalculateTextWidth(scoreText, 1.0f); // Assuming a scale of 1.0
+        std::string scoreText = std::to_string(leftScore) + " - " + std::to_string(rightScore); // Update the score text
+        float textWidth = CalculateTextWidth(scoreText, 1.0f);                                  // Assuming a scale of 1.0
         float scoreXPosition = (SCR_WIDTH - textWidth) / 2.0f;
-        float scoreYPosition = SCR_HEIGHT - 70.0f; // 50 pixels from the top, adjust as necessar
+        float scoreYPosition = SCR_HEIGHT - 70.0f; // 50 pixels from the top, adjust as necessary
         RenderText(freeTypeShaderProgram, scoreText, scoreXPosition, scoreYPosition, 1.0f, glm::vec3(0.5, 0.8f, 0.2f), freeTypeVAO, freeTypeVBO);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
