@@ -8,29 +8,61 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <map>
 #include FT_FREETYPE_H
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window, float deltaTime);
 void RenderText(unsigned int shaderProgram, std::string text, float x, float y, float scale, glm::vec3 color, int VAO, int VBO);
 float CalculateTextWidth(const std::string &text, float scale);
 void resetBall();
+unsigned int compileShader(GLenum type, const char *source);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-const char *vertexShaderSource = "#version 330 core\n"
-                                 "layout (location = 0) in vec3 aPos;\n"
-                                 "void main()\n"
-                                 "{\n"
-                                 "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-                                 "}\0";
+const char *vertexShaderSource = R"(
+    #version 330 core
+    layout (location = 0) in vec3 aPos;
+    layout (location = 1) in vec2 aTexCoord; // Texture coordinates
+    out vec2 TexCoord; // Pass texture coordinates to the fragment shader
+    void main()
+    {
+        gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+        TexCoord = aTexCoord; // Pass texture coordinates to the fragment shader
+    }
+)";
 const char *fragmentShaderSource = "#version 330 core\n"
                                    "out vec4 FragColor;\n"
                                    "void main()\n"
                                    "{\n"
                                    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
                                    "}\n\0";
+
+// Background vertex and fragment shader source code
+const char *backgroundVertexShaderSource = R"(
+    #version 330 core
+    layout (location = 0) in vec3 aPos;
+    layout (location = 1) in vec2 aTexCoord; // Texture coordinates
+    out vec2 TexCoord; // Pass texture coordinates to the fragment shader
+    void main()
+    {
+        gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+        TexCoord = aTexCoord; // Pass texture coordinates to the fragment shader
+    }
+)";
+
+const char *backgroundFragmentShaderSource = R"(
+    #version 330 core
+    out vec4 FragColor;
+    in vec2 TexCoord; // Texture coordinates received from vertex shader
+    uniform sampler2D backgroundTexture; // Texture sampler for the background
+    void main()
+    {
+        FragColor = texture(backgroundTexture, TexCoord); // Use the background texture with the provided texture coordinates
+    }
+)";
 
 const char *freeTypeVertexShaderSource = "#version 330 core\n"
                                          "layout (location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>\n"
@@ -165,6 +197,39 @@ int main()
     }
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+
+    // Build and compile the shader program for the background
+    unsigned int backgroundShaderProgram;
+    {
+        unsigned int backgroundVertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
+        unsigned int backgroundFragmentShader = compileShader(GL_FRAGMENT_SHADER, backgroundFragmentShaderSource);
+
+        if (!backgroundVertexShader || !backgroundFragmentShader)
+        {
+            std::cout << "Background shader program creation failed." << std::endl;
+            return -1;
+        }
+
+        backgroundShaderProgram = glCreateProgram();
+        glAttachShader(backgroundShaderProgram, backgroundVertexShader);
+        glAttachShader(backgroundShaderProgram, backgroundFragmentShader);
+        glLinkProgram(backgroundShaderProgram);
+
+        // Check for linking errors
+        int success;
+        char infoLog[512];
+        glGetProgramiv(backgroundShaderProgram, GL_LINK_STATUS, &success);
+        if (!success)
+        {
+            glGetProgramInfoLog(backgroundShaderProgram, 512, NULL, infoLog);
+            std::cout << "Background shader program linking failed:\n"
+                      << infoLog << std::endl;
+            return -1;
+        }
+
+        glDeleteShader(backgroundVertexShader);
+        glDeleteShader(backgroundFragmentShader);
+    }
 
     // free type setup
     std::cout << "Checkpoint 1" << std::endl;
@@ -335,6 +400,70 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    // Background vertices with texture coordinates
+    float backgroundVertices[] = {
+        // Position        // Texture Coordinates
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+        1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+
+        1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f};
+
+    // Initialize VBO and VAO for the background
+    unsigned int backgroundVBO, backgroundVAO;
+    glGenVertexArrays(1, &backgroundVAO);
+    glGenBuffers(1, &backgroundVBO);
+
+    // Bind and set VBO and VAO for the background
+    glBindVertexArray(backgroundVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, backgroundVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(backgroundVertices), backgroundVertices, GL_STATIC_DRAW);
+
+    // Position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    // Texture coordinate attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    // Load and create a texture
+    glUseProgram(shaderProgram);
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // Set texture wrapping and filtering options
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Load an image and generate the texture
+    int width, height, nrChannels;
+    unsigned char *image = stbi_load("./images/background.jpeg", &width, &height, &nrChannels, 0);
+
+    if (!image)
+    {
+        std::cout << "Failed to open image: " << stbi_failure_reason() << std::endl;
+        return -1;
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    stbi_image_free(image);
+
+    // Set uniform values for the background shader
+    glUseProgram(backgroundShaderProgram);
+    glUniform1i(glGetUniformLocation(backgroundShaderProgram, "backgroundTexture"), 0);
+
     // free type
 
     // Define color and projection before using them
@@ -364,6 +493,15 @@ int main()
         // Render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // Render the background
+        glUseProgram(backgroundShaderProgram);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glBindVertexArray(backgroundVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // Render rectangles and ball
+        glUseProgram(shaderProgram); // Switch back to the original shader program
 
         if (leftScore == MAX_SCORE || rightScore == MAX_SCORE)
         {
@@ -524,7 +662,11 @@ int main()
     // ------------------------------------------------------------------------
     glDeleteVertexArrays(1, &rectangleVAO);
     glDeleteBuffers(1, &rectangleVBO);
+    glDeleteVertexArrays(1, &backgroundVAO);
+    glDeleteBuffers(1, &backgroundVBO);
+    glDeleteTextures(1, &texture);
     glDeleteProgram(shaderProgram);
+    glDeleteProgram(backgroundShaderProgram);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     glfwTerminate();
@@ -639,4 +781,23 @@ void resetBall()
     ballPositionY = 0.0f;
     ballVelocityX = (rand() % 2 == 0 ? 1 : -1) * 0.3f; // Randomize starting direction
     ballVelocityY = 0.0f;                              // Initial Y-axis speed of the ball
+}
+
+unsigned int compileShader(GLenum type, const char *source)
+{
+    unsigned int shader = glCreateShader(type);
+    glShaderSource(shader, 1, &source, NULL);
+    glCompileShader(shader);
+    // Check for compilation errors
+    int success;
+    char infoLog[512];
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(shader, 512, NULL, infoLog);
+        std::cout << "Shader compilation error:\n"
+                  << infoLog << std::endl;
+        return 0; // Return 0 to indicate failure
+    }
+    return shader;
 }
