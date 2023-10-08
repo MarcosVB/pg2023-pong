@@ -308,17 +308,8 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    unsigned int freeTypeVertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(freeTypeVertexShader, 1, &freeTypeVertexShaderSource, NULL);
-    glCompileShader(freeTypeVertexShader);
-    // check for shader compile errors
-    // ... (similar to how you checked for vertexShader and fragmentShader)
-
-    unsigned int freeTypeFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(freeTypeFragmentShader, 1, &freeTypeFragmentShaderCode, NULL);
-    glCompileShader(freeTypeFragmentShader);
-    // check for shader compile errors
-    // ... (similar to how you checked for vertexShader and fragmentShader)
+    unsigned int freeTypeVertexShader = compileShader(GL_VERTEX_SHADER, freeTypeVertexShaderSource);
+    unsigned int freeTypeFragmentShader = compileShader(GL_FRAGMENT_SHADER, freeTypeFragmentShaderCode);
 
     unsigned int freeTypeShaderProgram = glCreateProgram();
     glAttachShader(freeTypeShaderProgram, freeTypeVertexShader);
