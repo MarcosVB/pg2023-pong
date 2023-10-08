@@ -224,7 +224,6 @@ int main()
     }
 
     // free type setup
-    std::cout << "Checkpoint 1" << std::endl;
     FT_Library ft;
     if (FT_Init_FreeType(&ft))
     {
@@ -232,7 +231,6 @@ int main()
         return -1;
     }
 
-    std::cout << "Checkpoint 2" << std::endl;
     FT_Face face;
     if (FT_New_Face(ft, "assets/PressStart2P-Regular.ttf", 0, &face))
     {
@@ -240,20 +238,16 @@ int main()
         return -1;
     }
 
-    std::cout << "Checkpoint 3" << std::endl;
     FT_Set_Pixel_Sizes(face, 0, 48);
 
-    std::cout << "Checkpoint 4" << std::endl;
     if (FT_Load_Char(face, 'X', FT_LOAD_RENDER))
     {
         std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
         return -1;
     }
 
-    std::cout << "Checkpoint 5" << std::endl;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // disable byte-alignment restriction
 
-    std::cout << "Checkpoint 6" << std::endl;
     for (unsigned char c = 0; c < 128; c++)
     {
         // load character glyph
