@@ -12,6 +12,7 @@
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 void RenderText(unsigned int shaderProgram, std::string text, float x, float y, float scale, glm::vec3 color, int VAO, int VBO);
+float CalculateTextWidth(const std::string &text, float scale);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -421,8 +422,12 @@ int main()
         glUseProgram(freeTypeShaderProgram);
         unsigned int projectionLoc = glGetUniformLocation(freeTypeShaderProgram, "projection");
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-        RenderText(freeTypeShaderProgram, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f), freeTypeVAO, freeTypeVBO);
-        RenderText(freeTypeShaderProgram, "(C) LearnOpenGL.com", 540.0f, 570.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f), freeTypeVAO, freeTypeVBO);
+
+        std::string scoreText = "1 - 0";                       // Or whatever your score text is
+        float textWidth = CalculateTextWidth(scoreText, 1.0f); // Assuming a scale of 1.0
+        float scoreXPosition = (SCR_WIDTH - textWidth) / 2.0f;
+        float scoreYPosition = SCR_HEIGHT - 70.0f; // 50 pixels from the top, adjust as necessar
+        RenderText(freeTypeShaderProgram, scoreText, scoreXPosition, scoreYPosition, 1.0f, glm::vec3(0.5, 0.8f, 0.2f), freeTypeVAO, freeTypeVBO);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
@@ -506,4 +511,15 @@ void RenderText(unsigned int shaderProgram, std::string text, float x, float y, 
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+float CalculateTextWidth(const std::string &text, float scale)
+{
+    float width = 0.0f;
+    for (char c : text)
+    {
+        Character ch = Characters[c];
+        width += (ch.Advance >> 6) * scale; // Bitshift by 6 to get value in pixels (2^6 = 64)
+    }
+    return width;
 }
