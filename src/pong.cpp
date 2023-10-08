@@ -13,6 +13,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window, float deltaTime);
 void RenderText(unsigned int shaderProgram, std::string text, float x, float y, float scale, glm::vec3 color, int VAO, int VBO);
 float CalculateTextWidth(const std::string &text, float scale);
+void resetBall();
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -57,7 +58,7 @@ const char *freeTypeFragmentShaderCode =
     "    color = vec4(textColor, 1.0) * sampled;\n"
     "}";
 
-const float moveSpeed = 1.0f;       // Speed of movement
+const float moveSpeed = 1.5f;       // Speed of movement
 const float rectangleHeight = 0.2f; // Height of the rectangle
 float leftRectangleYOffset = 0.0f;  // Variable to hold the Y-axis offset for the left rectangle
 float rightRectangleYOffset = 0.0f; // Variable to hold the Y-axis offset for the right rectangle
@@ -65,8 +66,8 @@ float rightRectangleYOffset = 0.0f; // Variable to hold the Y-axis offset for th
 // Ball variables
 float ballPositionX = 0.0f;    // Initial X position of the ball
 float ballPositionY = 0.0f;    // Initial Y position of the ball
-float ballVelocityX = 0.5f;    // Initial X-axis speed of the ball
-float ballVelocityY = 0.5f;    // Initial Y-axis speed of the ball
+float ballVelocityX = 0.3f;    // Initial X-axis speed of the ball
+float ballVelocityY = 0.3f;    // Initial Y-axis speed of the ball
 const float ballSize = 0.025f; // Size of the ball
 
 bool isPlaying = false;
@@ -75,6 +76,8 @@ bool gameOver = false;
 int MAX_SCORE = 3;
 int leftScore = 0;
 int rightScore = 0;
+
+const float SPEED_MULTIPLIER = 1.1f;
 
 struct Character
 {
@@ -440,19 +443,20 @@ int main()
             }
 
             // Paddle collision
+            // Paddle collision
             if (ballPositionX - ballSize <= -0.8f && ballPositionY <= leftRectangleYOffset + 0.1f && ballPositionY >= leftRectangleYOffset - 0.1f)
             {
-                ballVelocityX = -ballVelocityX;
+                ballVelocityX = -ballVelocityX * SPEED_MULTIPLIER;
                 float relativeIntersectionY = (leftRectangleYOffset - ballPositionY) / (rectangleHeight / 2);
-                ballVelocityY = relativeIntersectionY * 1.5f; // 1.5f determines the angle, adjust accordingly
-            }
-            else if (ballPositionX + ballSize >= 0.8f && ballPositionY <= rightRectangleYOffset + 0.1f && ballPositionY >= rightRectangleYOffset - 0.1f)
-            {
-                ballVelocityX = -ballVelocityX;
-                float relativeIntersectionY = (rightRectangleYOffset - ballPositionY) / (rectangleHeight / 2);
-                ballVelocityY = relativeIntersectionY * 1.5f; // 1.5f determines the angle, adjust accordingly
+                ballVelocityY = relativeIntersectionY * 1.5f * SPEED_MULTIPLIER; // 1.5f determines the angle, adjust accordingly
             }
 
+            else if (ballPositionX + ballSize >= 0.8f && ballPositionY <= rightRectangleYOffset + 0.1f && ballPositionY >= rightRectangleYOffset - 0.1f)
+            {
+                ballVelocityX = -ballVelocityX * SPEED_MULTIPLIER;
+                float relativeIntersectionY = (rightRectangleYOffset - ballPositionY) / (rectangleHeight / 2);
+                ballVelocityY = relativeIntersectionY * 1.5f * SPEED_MULTIPLIER; // 1.5f determines the angle, adjust accordingly
+            }
             // Reset ball if it goes past the left or right edges
             if (ballPositionX - ballSize <= -1.0f || ballPositionX + ballSize >= 1.0f)
             {
@@ -464,8 +468,7 @@ int main()
                 {
                     leftScore++; // Increment left player's score when the ball passes the right edge
                 }
-                ballPositionX = 0.0f;
-                ballPositionY = 0.0f;
+                resetBall();
             }
 
             // Update ball vertex data based on its position
@@ -628,4 +631,12 @@ float CalculateTextWidth(const std::string &text, float scale)
         width += (ch.Advance >> 6) * scale; // Bitshift by 6 to get value in pixels (2^6 = 64)
     }
     return width;
+}
+
+void resetBall()
+{
+    ballPositionX = 0.0f;
+    ballPositionY = 0.0f;
+    ballVelocityX = (rand() % 2 == 0 ? 1 : -1) * 0.3f; // Randomize starting direction
+    ballVelocityY = 0.3f;                              // Initial Y-axis speed of the ball
 }
